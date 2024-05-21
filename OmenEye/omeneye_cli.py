@@ -74,7 +74,7 @@ def cli():
         '--seed-file',
         type=str,
         required=False, 
-        help='The list of urls to seed the crawl from'
+        help='A list of urls to seed the crawl from'
     )
     
 
@@ -141,7 +141,7 @@ def cli():
         '--blacklist-file',
         type=str,
         required=False, 
-        help='The list of blacklist regex to avoid when crawling'
+        help='A list of blacklist regex to avoid when crawling'
     )
 
     parser.add_argument(

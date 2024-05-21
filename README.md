@@ -17,7 +17,7 @@ options:
   --url URL             Required URL to crawl
   --output OUTPUT       Required output DB name (do not use an existing DB)
   --seed-file SEED_FILE
-                        The list of urls to seed the crawl from
+                        A list of urls to seed the crawl from
   --mitm [MITM]         MITM port for catching an authenticated request for authed crawls (Default 8080 if used)
   --depth DEPTH         Optional depth, defaults to 2 when not explicitly set
   --delay DELAY         Optional delay in seconds, requires an integer value
@@ -30,7 +30,7 @@ options:
                         scope or depth. Defaults to False.
   --silent              Flag to run without live curses output. Defaults to False.
   --blacklist-file BLACKLIST_FILE
-                        The list of blacklist regex to avoid when crawling
+                        A list of blacklist regex to avoid when crawling
   --canary {basic,adaptive}
                         Use a basic or adaptive HTTP WAF Canary
   --proxy PROXY         HTTP/S proxy to tunnel requests through (host:port)
