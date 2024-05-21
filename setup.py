@@ -25,7 +25,7 @@ setup(
     description='',
     #long_description=open('description.md').read(),
     #long_description_content_type='text/markdown',
-    url='https://github.com/moorejacob2017/',
+    url='https://github.com/moorejacob2017/OmenEye',
     license='MIT',
     classifiers=[
         'License :: OSI Approved :: MIT License',
