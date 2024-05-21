@@ -138,10 +138,10 @@ def cli():
 
 
     parser.add_argument(
-        '--blacklist-file',
+        '--blacklist',
         type=str,
         required=False, 
-        help='A list of blacklist regex to avoid when crawling'
+        help='A file with a list of blacklist regex to avoid when crawling'
     )
 
     parser.add_argument(
@@ -197,7 +197,7 @@ def cli():
         subdomains=args.subdomains,
         js_grabbing=args.js_grabbing,
         unvisited=args.unvisited,
-        blacklist_file=args.blacklist_file,
+        blacklist_file=args.blacklist,
         canary=args.canary,
         proxy=args.proxy,
         num_request_builders=args.builders,

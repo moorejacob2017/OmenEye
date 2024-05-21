@@ -97,6 +97,8 @@ class OmenEye:
         self.visited = set()
         self.seen = set()
 
+        self.unvisited = unvisited
+
 
         if seed_file:
             with open(seed_file, 'r') as sf:
@@ -165,7 +167,7 @@ class OmenEye:
                 'http': f'http://{proxy}',
                 'https': f'http://{proxy}'
             }
-            self.session.proxies.update(proxy)
+            self.session.proxies.update(proxies)
 
 
         # Delay and Jitter
