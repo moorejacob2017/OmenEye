@@ -1,5 +1,5 @@
 import argparse
-from .OmenEye import OmenEye
+from OmenEye import OmenEye
 
 schema_text = '''
 
