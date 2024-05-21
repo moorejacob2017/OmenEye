@@ -114,19 +114,19 @@ class OmenEye:
         if canary:
             if canary.lower() == 'basic':
                 self.canary = BasicWAFCanary(
-                    url=url,
+                    url,
                     canary_check_interval=60
                 )
-                print('Using Basic HTTP WAF Canary...')
+                print('Using Basic HTTP WAF Canary.')
             elif canary.lower() == 'adaptive':
                 self.canary = AdaptiveWAFCanary(
-                    url=url,
+                    url,
                     canary_check_interval=60,
                     max_canary_check_interval=21600
                 )
-                print('Using Adaptive HTTP WAF Canary...')
+                print('Using Adaptive HTTP WAF Canary.')
             else:
-                print(f'Invalid Canary type: {canary}')
+                print('Invalid Canary type. Must be "basic" or "adaptive". Got ' + str(canary))
                 exit(1)
             # Make sure message is displayed
             time.sleep(5)
@@ -199,13 +199,9 @@ class OmenEye:
 
         # Canary Blocking
         if self.canary:
-            block_flag = False
             while self.canary.is_blocked:
-                if not block_flag:
-                    print('Canary Blocked...')
-                    block_flag == True
-            if block_flag:
-                print('Canary Unlocked...')
+                time.sleep(1)
+
 
         if self.timing_lock:
             self.timing_lock.acquire()
@@ -272,12 +268,18 @@ class OmenEye:
 
     def run(self, stdscr=None):
         try:
+            if self.canary:
+                if stdscr:
+                    stdscr.clear()
+                    stdscr.addstr(0, 0, '---------------------------[OMEN EYE]---------------------------')
+                    stdscr.addstr(1, 0, 'Canary establishing baseline. Please wait 180-300 seconds...')
+                    stdscr.refresh()
+                self.canary.start()
             self.RequestBuilders.start_threads()
             self.RequestWorkers.start_threads()
             self.ResponseParsers.start_threads()
             self.DBWorkers.start_threads()
-            if self.canary:
-                self.canary.start()
+            
 
             closed_request_threads = False
             finished = False
@@ -331,7 +333,12 @@ class OmenEye:
                     stdscr.addstr(11, 0, f' ResponseParsers\' Output Rate  : {parser_output_rate:9.2f} tasks/sec')
                     stdscr.addstr(12, 0, f' DBWorkers\' Intake Rate        : {dbworker_input_rate:9.2f} tasks/sec')                    
                     stdscr.addstr(13, 0, f' DBWorkers\' Output Rate        : {dbworker_output_rate:9.2f} tasks/sec')
-                    stdscr.addstr(14, 0, f'\n')
+                    stdscr.addstr(14, 0, f'                                                                     ')
+                    if self.canary.is_blocked:
+                        stdscr.addstr(15, 0, f' Canary says Blocked!                                                ')
+                        stdscr.addstr(16, 0, f'                                                                     ')
+                    else:
+                        stdscr.addstr(15, 0, f'                                                                     ')
                     # Refresh the screen to update the changes
                     stdscr.refresh()
 
@@ -374,7 +381,7 @@ class OmenEye:
         except KeyboardInterrupt:
             if stdscr:
                 #stdscr.clear()
-                stdscr.addstr(15, 0, f' Caught KeyboardInterrupt. Shutting down...')
+                stdscr.addstr(17, 0, f' Caught KeyboardInterrupt. Shutting down...')
                 stdscr.refresh()
 
         if self.canary:

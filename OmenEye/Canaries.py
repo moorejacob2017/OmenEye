@@ -44,14 +44,14 @@ class BasicWAFCanary:
                 sleep(30)
             try:
                 #response = requests.get(self.url, timeout=10)
+                user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246'
                 request = requests.Request('GET', url=self.canary_url)
-                request.headers['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0'
+                request.headers['User-Agent'] = user_agent
                 with requests.Session() as s:
                     response = s.send(request.prepare(), timeout=30)
 
                 responses.append(response)
             except requests.RequestException as e:
-                #print(e)
                 pass
 
         if len(responses) < 3:
@@ -102,15 +102,14 @@ class BasicWAFCanary:
 
     def start(self):
         """Start the canary thread."""
-        print('Etablishing Baseline...')
         self._establish_baseline()
-        print('Starting Canary...')
         self._thread.start()
 
     def stop(self):
         """Stop the canary thread."""
         self._stop_event.set()
-        self._thread.join(timeout=60)
+        if self._thread.is_alive():
+            self._thread.join(timeout=60)
     
     def _check(self):
             response = None
