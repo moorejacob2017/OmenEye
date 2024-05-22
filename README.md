@@ -4,10 +4,8 @@ A next-gen web crawler for precision attack surface mapping. Dumps results from 
 
 
 ```txt
-usage: omeneye [-h] --url URL --output OUTPUT [--seed-file SEED_FILE] [--mitm [MITM]] [--depth DEPTH]
-               [--delay DELAY] [--jitter JITTER] [--robots] [--sitemaps] [--subdomains] [--js-grabbing]
-               [--unvisited] [--silent] [--blacklist BLACKLIST] [--canary {basic,adaptive}] [--proxy PROXY]
-               [--builders BUILDERS] [--workers WORKERS] [--parsers PARSERS] [--db-workers DB_WORKERS]
+usage: omeneye [-h] --url URL --output OUTPUT [--seed-file SEED_FILE] [--mitm [MITM]] [--depth DEPTH] [--delay DELAY] [--jitter JITTER] [--robots] [--sitemaps] [--subdomains] [--js-grabbing] [--render] [--unvisited] [--silent]
+               [--blacklist BLACKLIST] [--canary {basic,adaptive}] [--proxy PROXY] [--builders BUILDERS] [--workers WORKERS] [--parsers PARSERS] [--db-workers DB_WORKERS]
 
 Omen Eye - Specialty site mapper and web crawler
 
@@ -25,8 +23,8 @@ options:
   --sitemaps            Flag to seed with sitemaps. Defaults to False.
   --subdomains          Flag to include subdomains. Defaults to False.
   --js-grabbing         Flag to grab out of scope JS files. Defaults to False.
-  --unvisited           Flag to include in-domain urls in the results that were seen, but were unvisited due to
-                        scope or depth. Defaults to False.
+  --render              Flag to use Firefox/GeckoDriver to render dynamic webpages. Defaults to False. (SLOW)
+  --unvisited           Flag to include in-domain urls in the results that were seen, but were unvisited due to scope or depth. Defaults to False.
   --silent              Flag to run without live curses output. Defaults to False.
   --blacklist BLACKLIST
                         A file with a list of blacklist regex to avoid when crawling
