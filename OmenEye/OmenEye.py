@@ -184,6 +184,10 @@ class OmenEye:
         # drivers are created at once). Currently, only
         # uses drivers when intitial gets comeback with
         # html, so they are used as needed.
+        # Also, consider creating support for Chrome
+        # drivers instead of mandatory Firefox drivers.
+        # Should be added in DriverUtils
+        #   --render {firefox,chrome}
         if render:
             self.driver_lock = threading.Lock()
             self.driver = create_webdriver(url, self.session)
