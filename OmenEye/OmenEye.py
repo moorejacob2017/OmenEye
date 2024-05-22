@@ -177,6 +177,13 @@ class OmenEye:
             self.session.proxies.update(proxies)
 
 
+        # If drivers start bottle necking speed, either start
+        # using a pool of drivers (resource heavy) or start
+        # creating and destroying drivers as needed in the
+        # worker threads (might spike hardware if too many
+        # drivers are created at once). Currently, only
+        # uses drivers when intitial gets comeback with
+        # html, so they are used as needed.
         if render:
             self.driver_lock = threading.Lock()
             self.driver = create_webdriver(url, self.session)
