@@ -334,11 +334,12 @@ class OmenEye:
                     stdscr.addstr(12, 0, f' DBWorkers\' Intake Rate        : {dbworker_input_rate:9.2f} tasks/sec')                    
                     stdscr.addstr(13, 0, f' DBWorkers\' Output Rate        : {dbworker_output_rate:9.2f} tasks/sec')
                     stdscr.addstr(14, 0, f'                                                                     ')
-                    if self.canary.is_blocked:
-                        stdscr.addstr(15, 0, f' Canary says Blocked!                                                ')
-                        stdscr.addstr(16, 0, f'                                                                     ')
-                    else:
-                        stdscr.addstr(15, 0, f'                                                                     ')
+                    if self.canary:
+                        if self.canary.is_blocked:
+                            stdscr.addstr(15, 0, f' Canary says Blocked!                                                ')
+                            stdscr.addstr(16, 0, f'                                                                     ')
+                        else:
+                            stdscr.addstr(15, 0, f'                                                                     ')
                     # Refresh the screen to update the changes
                     stdscr.refresh()
 

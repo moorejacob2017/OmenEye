@@ -189,18 +189,19 @@ def get_links(response, content):
         location = response.headers['Location']
         full_url = urljoin(original_url, location)
         links.add(full_url)
+
     elif response.is_redirect and 'location' in response.headers:
         original_url = response.request.url
         location = response.headers['location']
         full_url = urljoin(original_url, location)
-        links.add(full_url)
+
 
     if 'Content-Type' in response.headers:
         content_type = response.headers['Content-Type'].lower()
     elif 'content-type' in response.headers:
         content_type = response.headers['content-type'].lower()
     else:
-        content_type = None
+        content_type = ''
 
     try:
         # RSS Feeds
@@ -235,8 +236,6 @@ def get_links(response, content):
             content = unpack_gz_content(content)
             text = str(content, errors="replace")
             soup = BeautifulSoup(text, 'xml')
-        else:
-            return []
 
         if soup:
             # Define the tags and attributes to look for
@@ -329,7 +328,7 @@ def get_inputs(response, content):
     elif 'content-type' in response.headers:
         content_type = response.headers['content-type'].lower()
     else:
-        content_type = None
+        content_type = ''
 
     if 'html' in content_type:
         soup = BeautifulSoup(get_text(response, content), 'html.parser')
