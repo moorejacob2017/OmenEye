@@ -203,6 +203,12 @@ def get_links(response, content, get_rendered=False):
     else:
         content_type = ''
 
+
+    # Get all Links in Link headers
+    for key, value in response.links.items():
+        if isinstance(value, dict) and 'url' in value:
+            links.add(value['url'])
+
     try:
         # RSS Feeds
         if parsed.path.endswith('.rss'):
