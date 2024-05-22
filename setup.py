@@ -19,6 +19,7 @@ setup(
         'asyncio',
         'chardet',
         'feedparser',
+        'selenium',
     ],
     author='Jacob Moore',
     author_email='moorejacob2017@gmail.com',

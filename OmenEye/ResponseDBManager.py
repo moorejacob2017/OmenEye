@@ -14,7 +14,7 @@ from .RequestUtils import *
 #https://peps.python.org/pep-0703/
 
 class DummyResponse:
-    def __init__(self, response=None, content=b''):
+    def __init__(self, response=None, content=b'', get_rendered=False):
         if response:
             self.url = str(response.request.url)
             self.visited = True
@@ -22,9 +22,15 @@ class DummyResponse:
             self.content = bytes(content)
             self.headers = dict(response.headers)
             self.text = get_text(response, content)
-            self.links = get_links(response, content)
+
+            if get_rendered:
+                self.links = get_links(response, content)
+            else:
+                self.links = get_links(response, content)
+
             self.query_params = get_qps(self.url)
             self.inputs = get_inputs(response, content)
+            self.is_redirect = bool(response.is_redirect)
         else:
             self.url = None
             self.visited = False
@@ -35,6 +41,7 @@ class DummyResponse:
             self.links = []
             self.query_params = []
             self.inputs = []
+            self.is_redirect = None
     
     '''Use for urls that have been seen but are unvisited'''
     def blank_w_url(self, url):

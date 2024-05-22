@@ -179,7 +179,7 @@ def unpack_gz_content(binary_content):
         return b""
 
 # Takes DummyResponse.response
-def get_links(response, content):
+def get_links(response, content, get_rendered=False):
     links = set()  # Using a set to avoid duplicate links
     soup = None
     parsed = urlparse(response.url)
@@ -208,7 +208,7 @@ def get_links(response, content):
         if parsed.path.endswith('.rss'):
             feed = feedparser.parse(response.url)
             for entry in feed.entries:
-                links = entry.link
+                link = entry.link
                 full_url = urljoin(response.url, link)
                 parsed_url = urlparse(full_url)
                 if parsed_url.scheme and parsed_url.netloc:
@@ -343,6 +343,11 @@ def get_inputs(response, content):
             tag_value = element.get('value', '')
             inputs.append((tag, tag_name, tag_value))
     return inputs
+
+def same_domain(url1, url2):
+    netloc1 = urlparse(url1).netloc
+    netloc2 = urlparse(url2).netloc
+    return netloc1 == netloc2
 
 
 '''

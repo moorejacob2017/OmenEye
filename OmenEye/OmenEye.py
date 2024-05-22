@@ -2,7 +2,7 @@ import queue
 import curses
 import requests
 import time
-
+import threading
 from .WorkerManager import WorkerManager
 from .ResponseDBManager import ResponseDBManager, DummyResponse
 from .Scope import Scope
@@ -10,6 +10,7 @@ from .RequestUtils import *
 from .CooldownLock import CooldownLock
 from .Canaries import BasicWAFCanary, AdaptiveWAFCanary
 from .GetAuthSession import get_auth_session
+from .DriverUtils import create_webdriver, create_auth_webdriver, get_rendered_content
 
 class OmenEye:
     def __init__(
@@ -28,9 +29,12 @@ class OmenEye:
             sitemaps=False,
             subdomains=False,
             js_grabbing=False,
+            render=None,
             unvisited=False,
 
             blacklist_file=None,
+
+            
             #whitelist_regex=None,
             #blacklist_regex=None,
             #whitelist_file=None,
@@ -91,6 +95,7 @@ class OmenEye:
             input_queue=self.results_queue
         )
         #---------------------------------------
+        self.url = url
 
         self.url_queue.put((url, 0))
         
@@ -160,6 +165,8 @@ class OmenEye:
         else:
             self.session = requests.Session()
         self.session.keep_alive = False
+        user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246'
+        self.session.headers.update({'User-Agent': user_agent})
 
 
         if proxy:
@@ -168,6 +175,16 @@ class OmenEye:
                 'https': f'http://{proxy}'
             }
             self.session.proxies.update(proxies)
+
+
+        if render:
+            self.driver_lock = threading.Lock()
+            self.driver = create_webdriver(url, self.session)
+            self.auth_driver_lock = threading.Lock()
+            self.auth_driver = create_auth_webdriver(url, self.session)
+        else:
+            self.driver = None
+            self.auth_driver = None
 
 
         # Delay and Jitter
@@ -187,8 +204,7 @@ class OmenEye:
         url, depth = item
         if not url in self.visited and not url.split('#')[0] in self.visited and not url.split('#')[0] + '#' in self.visited:
             self.visited.add(url)
-            user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246'
-            request = requests.Request('GET', url, headers={'User-Agent': user_agent})
+            request = requests.Request('GET', url)
             return (request, depth)
         else:
             return None
@@ -202,10 +218,32 @@ class OmenEye:
             while self.canary.is_blocked:
                 time.sleep(1)
 
-
         if self.timing_lock:
             self.timing_lock.acquire()
+        
+
         response, content = get_url_w_request_and_session(request, self.session)
+        if self.driver: # If we are rendering
+            if not response.is_redirect: # If not a redirect
+                if 'Content-Type' in response.headers:
+                    content_type = response.headers['Content-Type'].lower()
+                elif 'content-type' in response.headers:
+                    content_type = response.headers['content-type'].lower()
+                else:
+                    content_type = ''
+                if 'html' in content_type.lower(): # If it should be rendered (html)
+                    if same_domain(response.url, self.url): # If is the same domain as any collected cookies
+                        with self.driver_lock: # Use the authenticated driver
+                            str_content = get_rendered_content(response.url, self.auth_driver)
+                    else: 
+                        with self.auth_driver_lock: # Else, use the regular driver
+                            str_content = get_rendered_content(response.url, self.driver)
+                    encoding = response.encoding if response.encoding else 'ISO-8859-1'
+                    content = str_content.encode(encoding, errors='replace')
+        # This structure is necessary to juggle render, auth, and subdomains
+        # since drivers with cookies error out on domains that are not
+        # the same as the cookies
+        
         if self.timing_lock:
             self.timing_lock.release()
         

@@ -126,6 +126,11 @@ def cli():
         help='Flag to grab out of scope JS files. Defaults to False.'
     )
     parser.add_argument(
+        '--render',
+        action='store_true',  # The argument will be True if provided, False if not
+        help='Flag to use Firefox/GeckoDriver to render dynamic webpages. Defaults to False. (SLOW)'
+    )
+    parser.add_argument(
         '--unvisited',
         action='store_true',  # The argument will be True if provided, False if not
         help='Flag to include in-domain urls in the results that were seen, but were unvisited due to scope or depth. Defaults to False.'
@@ -135,7 +140,6 @@ def cli():
         action='store_true',  # The argument will be True if provided, False if not
         help='Flag to run without live curses output. Defaults to False.'
     )
-
 
     parser.add_argument(
         '--blacklist',
@@ -196,6 +200,7 @@ def cli():
         sitemaps=args.sitemaps,
         subdomains=args.subdomains,
         js_grabbing=args.js_grabbing,
+        render=args.render,
         unvisited=args.unvisited,
         blacklist_file=args.blacklist,
         canary=args.canary,
