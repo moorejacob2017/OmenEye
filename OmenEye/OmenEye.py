@@ -182,7 +182,7 @@ class OmenEye:
         # creating and destroying drivers as needed in the
         # worker threads (might spike hardware if too many
         # drivers are created at once). Currently, only
-        # uses drivers when intitial gets comeback with
+        # uses drivers when intitial http requests comeback with
         # html, so they are used as needed.
         # Also, consider creating support for Chrome
         # drivers instead of mandatory Firefox drivers.
