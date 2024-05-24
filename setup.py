@@ -14,12 +14,11 @@ setup(
     },
     install_requires=[
         'requests',
-        'mitmproxy',
         'beautifulsoup4',
         'asyncio',
         'chardet',
         'feedparser',
-        'selenium',
+        'selenium>=4.21.0'
     ],
     author='Jacob Moore',
     author_email='moorejacob2017@gmail.com',
