@@ -126,11 +126,6 @@ def cli():
         help='Flag to grab out of scope JS files. Defaults to False.'
     )
     parser.add_argument(
-        '--render',
-        action='store_true',  # The argument will be True if provided, False if not
-        help='Flag to use Firefox/GeckoDriver to render dynamic webpages. Defaults to False. (SLOW)'
-    )
-    parser.add_argument(
         '--unvisited',
         action='store_true',  # The argument will be True if provided, False if not
         help='Flag to include in-domain urls in the results that were seen, but were unvisited due to scope or depth. Defaults to False.'
@@ -160,6 +155,22 @@ def cli():
         help='HTTP/S proxy to tunnel requests through (host:port)'
     )
     
+    parser.add_argument(
+        '--render',
+        action='store_true',  # The argument will be True if provided, False if not
+        help='Flag to use Firefox/GeckoDriver to render dynamic webpages. Defaults to False. (Can be slow and resource intensive)'
+    )
+    parser.add_argument(
+        '--no-headless',
+        action='store_true',
+        help='Wanna watch the watch the Rendering Drivers work?'
+    )
+    parser.add_argument(
+        '--drivers',
+        type=int,
+        default=1,  # Default value if the argument is not provided
+        help='Number of Rendering Drivers to use if rendering (Default 1) (WARNING: This number is doubled whenever the render, auth, and subdomains args are used together)'
+    )
 
     parser.add_argument(
         '--builders',
@@ -200,11 +211,13 @@ def cli():
         sitemaps=args.sitemaps,
         subdomains=args.subdomains,
         js_grabbing=args.js_grabbing,
-        render=args.render,
         unvisited=args.unvisited,
         blacklist_file=args.blacklist,
         canary=args.canary,
         proxy=args.proxy,
+        render=args.render,
+        headless=(not args.no_headless),
+        num_drivers=args.drivers,
         num_request_builders=args.builders,
         num_request_workers=args.workers,
         num_response_parsers=args.parsers,

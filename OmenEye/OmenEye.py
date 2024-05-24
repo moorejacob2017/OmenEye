@@ -10,7 +10,7 @@ from .RequestUtils import *
 from .CooldownLock import CooldownLock
 from .Canaries import BasicWAFCanary, AdaptiveWAFCanary
 from .GetAuthSession import get_auth_session
-from .DriverUtils import create_webdriver, create_auth_webdriver, get_rendered_content
+from .DriverUtils import DriverCheckoutManager, create_webdriver, create_auth_webdriver, get_rendered_content
 
 class OmenEye:
     def __init__(
@@ -29,7 +29,7 @@ class OmenEye:
             sitemaps=False,
             subdomains=False,
             js_grabbing=False,
-            render=None,
+            
             unvisited=False,
 
             blacklist_file=None,
@@ -41,11 +41,16 @@ class OmenEye:
 
             canary=None,
             proxy=None,
+
+            render=None,
+            headless=None,
+            num_drivers=1,
             
             num_request_builders=1, # builders
             num_request_workers=5, # workers
             num_response_parsers=2, # parsers
             num_db_workers=3, # db-workers
+
         ):
 
         # Finish DummyResponse and ResponseDBManager
@@ -189,13 +194,24 @@ class OmenEye:
         # Should be added in DriverUtils
         #   --render {firefox,chrome}
         if render:
-            self.driver_lock = threading.Lock()
-            self.driver = create_webdriver(url, self.session)
-            self.auth_driver_lock = threading.Lock()
-            self.auth_driver = create_auth_webdriver(url, self.session)
+            if mitm_port: # If Auth
+                auth_drivers = [create_auth_webdriver(url, self.session, headless=headless) for _ in range(num_drivers)]
+                self.auth_driver_manager = DriverCheckoutManager(auth_drivers)
+
+                if subdomains: # If subdomains
+                    drivers = [create_webdriver(self.session, headless=headless) for _ in range(num_drivers)]
+                    self.driver_manager = DriverCheckoutManager(drivers)
+                else:
+                    self.driver_manager = None
+
+            else:
+                self.auth_driver_manager = None
+                drivers = [create_webdriver(self.session, headless=headless) for _ in range(num_drivers)]
+                self.driver_manager = DriverCheckoutManager(drivers)
+        
         else:
-            self.driver = None
-            self.auth_driver = None
+            self.auth_driver_manager = None
+            self.driver_manager = None
 
 
         # Delay and Jitter
@@ -234,7 +250,7 @@ class OmenEye:
         
 
         response, content = get_url_w_request_and_session(request, self.session)
-        if self.driver: # If we are rendering
+        if self.driver_manager or self.auth_driver_manager: # If we are rendering
             if not response.is_redirect: # If not a redirect
                 if 'Content-Type' in response.headers:
                     content_type = response.headers['Content-Type'].lower()
@@ -243,13 +259,30 @@ class OmenEye:
                 else:
                     content_type = ''
                 if 'html' in content_type.lower(): # If it should be rendered (html)
-                    if same_domain(response.url, self.url): # If is the same domain as any collected cookies
-                        with self.driver_lock: # Use the authenticated driver
-                            str_content = get_rendered_content(response.url, self.auth_driver)
-                    else: 
-                        with self.auth_driver_lock: # Else, use the regular driver
-                            str_content = get_rendered_content(response.url, self.driver)
+
+                    used_auth = False
+                    if same_domain(response.url, self.url):
+                        if self.auth_driver_manager:
+                            used_auth = True
+                            driver = self.auth_driver_manager.checkout()
+                        else:
+                            driver = self.driver_manager.checkout()
+                    else:
+                        driver = self.driver_manager.checkout()
+
+                    try: # ALWAYS free the driver after use, no matter what
+                        str_content = get_rendered_content(response.url, driver)
+                    except:
+                        strcontent = ''
+                    finally:
+                        if used_auth:
+                            self.auth_driver_manager.checkin(driver)
+                        else:
+                            self.driver_manager.checkin(driver)
+
+                    #str_content = get_rendered_content(response.url, self.driver)
                     encoding = response.encoding if response.encoding else 'ISO-8859-1'
+
                     content = str_content.encode(encoding, errors='replace')
         # This structure is necessary to juggle render, auth, and subdomains
         # since drivers with cookies error out on domains that are not
@@ -414,6 +447,11 @@ class OmenEye:
 
                         if self.canary:
                             self.canary.stop()
+
+                        if self.auth_driver_manager:
+                            self.auth_driver_manager.stop_drivers()
+                        if self.driver_manager:
+                            self.driver_manager.stop_drivers()
                         
                         # Add all of the ones that were seen but
                         # where never visited for some reason
@@ -436,6 +474,10 @@ class OmenEye:
 
         if self.canary:
             self.canary.stop()
+        if self.auth_driver_manager:
+            self.auth_driver_manager.stop_drivers()
+        if self.driver_manager:
+            self.driver_manager.stop_drivers()
         self.RequestBuilders.stop_threads()
         self.RequestWorkers.stop_threads()
         self.ResponseParsers.stop_threads()
