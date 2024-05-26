@@ -6,11 +6,28 @@ import threading
 from .WorkerManager import WorkerManager
 from .ResponseDBManager import ResponseDBManager, DummyResponse
 from .Scope import Scope
-from .RequestUtils import *
 from .CooldownLock import CooldownLock
 from .Canaries import BasicWAFCanary, AdaptiveWAFCanary
 from .GetAuthSession import get_auth_session
 from .DriverUtils import DriverCheckoutManager, create_webdriver, create_auth_webdriver, get_rendered_content
+
+from .RequestUtils import *
+#Functions imported from RequestUtils
+#    same_domain
+#    get_inputs
+#    get_qps
+#    get_links
+#    unpack_gz_content
+#    is_gz_file
+#    get_url_w_request_and_session
+#    get_url
+#    get_text
+#    get_content_with_max_size
+#    filter_invalid_urls
+#    check_urls_list
+#    is_valid_url
+#    standardize_url
+
 
 class OmenEye:
     def __init__(
@@ -165,7 +182,6 @@ class OmenEye:
 
         # Session
         if mitm_port:
-            print(f'MITM proxy started on port {mitm_port}...')
             self.session = get_auth_session(port=mitm_port)
         else:
             self.session = requests.Session()
@@ -306,11 +322,13 @@ class OmenEye:
             lo = [
                 "logout",
                 "log-out",
+                "log_out",
                 "log%20out",
                 "log%2520out",
                 "log out",
                 "signout",
                 "sign-out",
+                "sign_out",
                 "sign%20out",
                 "sign%2520out"
                 "sign out",
@@ -401,7 +419,9 @@ class OmenEye:
                     parser_input_rate, parser_output_rate = self.ResponseParsers.get_rates()
                     dbworker_input_rate, dbworker_output_rate = self.DBWorkers.get_rates()
                     #stdscr.addstr(0, 0, '----------[OMEN EYE]----------')
-                    stdscr.addstr(0, 0, '---------------------------[OMEN EYE]---------------------------')
+                    #---------------------------
+                    #===========================
+                    stdscr.addstr(0, 0, '===========================[ OMEN EYE ]===========================')
                     stdscr.addstr(1, 0, f' URL Queue Tasks Left        : {current_url_tasks:9} ({url_rate:+9.2f} tasks/sec)')
                     stdscr.addstr(2, 0, f' Request Queue Tasks Left    : {current_request_tasks:9} ({request_rate:+9.2f} tasks/sec)')
                     stdscr.addstr(3, 0, f' Response Queue Tasks Left   : {current_response_tasks:9} ({response_rate:+9.2f} tasks/sec)')
@@ -458,7 +478,11 @@ class OmenEye:
                         if self.unvisited:
                             for seen in self.seen:
                                 if not seen in self.visited:
-                                    self.results_queue.put(DummyResponse().blank_w_url(seen))
+                                    if self.scope.subdomains:
+                                        self.results_queue.put(DummyResponse().blank_w_url(seen))
+                                    else:
+                                        if same_domain(self.url, seen):
+                                            self.results_queue.put(DummyResponse().blank_w_url(seen))
 
                 
                 if url_q and request_q and response_q and results_q:

@@ -1,4 +1,3 @@
-import argparse
 import base64
 import glob
 import gzip
@@ -687,7 +686,7 @@ def print_info(stdscr, req, req_body, res, res_body):
     cookie = req.headers.get("Cookie", "")
     if cookie:
         cookie = parse_qsl(re.sub(r";\s*", "&", cookie))
-        content_lines.append("==== COOKIES ====\n" )
+        content_lines.append("====[ COOKIES ]====\n" )
         content_lines.extend(wrap_text(cookie, curses.COLS))
 
     if req_body is not None:
@@ -717,7 +716,7 @@ def print_info(stdscr, req, req_body, res, res_body):
             req_body_text = None
 
         if req_body_text:
-            content_lines.append("==== REQUEST BODY ====")
+            content_lines.append("====[ REQUEST BODY ]====")
             content_lines.extend(wrap_text(req_body_text, curses.COLS))
 
     # Displaying the content with scrolling
@@ -823,6 +822,11 @@ def generate_certificates():
 def get_auth_session(port=8080):
 
     generate_certificates()
+
+    print('')
+    print(f'MITM proxy will be started on port {port}.')
+    print(f'For HTTPS interception, install the Omen Eye Root CA Certificate located at {oe_ca_cert} or navigate to \'http://omeneye\' while using the MITM proxy to download it.')
+    print('')
 
     global caught_request
     global save_handler

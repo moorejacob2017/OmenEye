@@ -1,60 +1,11 @@
 import argparse
 from OmenEye import OmenEye
 
-schema_text = '''
-
-TIP: You can use the sqlite3 cli tool to run queries from the command line
-    Example: sqlite3 output.db 'SELECT url FROM responses'
-
-
------------------------[Output Database Schema]-----------------------
-    CREATE TABLE responses (
-        response_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        url TEXT,
-        visited INTEGER,
-        status_code INTEGER,
-        body BLOB
-    )
-
-    CREATE TABLE headers (
-        header_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        response_id INTEGER,
-        header_name TEXT,
-        header_value TEXT,
-        FOREIGN KEY (response_id) REFERENCES responses(response_id)
-    )
-
-    CREATE TABLE links (
-        link_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        response_id INTEGER,
-        link TEXT,
-        FOREIGN KEY (response_id) REFERENCES responses(response_id)
-    )
-
-    CREATE TABLE query_params (
-        param_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        response_id INTEGER,
-        param_name TEXT,
-        param_value TEXT,
-        FOREIGN KEY (response_id) REFERENCES responses(response_id)
-    )
-
-    CREATE TABLE inputs (
-        input_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        response_id INTEGER,
-        tag TEXT,
-        tag_name TEXT,
-        tag_value TEXT,
-        FOREIGN KEY (response_id) REFERENCES responses(response_id)
-    )
-----------------------------------------------------------------------
-'''
-
 
 def cli():
     parser = argparse.ArgumentParser(
         description='Omen Eye - Specialty site mapper and web crawler',
-        epilog=schema_text,
+        #epilog=schema_text,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
@@ -83,7 +34,8 @@ def cli():
         nargs='?',
         const=8080,  # Default value if the argument is provided without a value
         type=int,  # Specify that the argument should be an integer
-        help='MITM port for catching an authenticated request for authed crawls (Default 8080 if used)'
+        help='MITM port for catching an authenticated request for authed crawls (Default 8080 if used)',
+        metavar='PORT'
     )
     parser.add_argument(
         '--depth',
@@ -152,7 +104,8 @@ def cli():
         '--proxy',
         type=str,
         required=False, 
-        help='HTTP/S proxy to tunnel requests through (host:port)'
+        help='HTTP/S proxy to tunnel requests through',
+        metavar='HOST:PORT'
     )
     
     parser.add_argument(
@@ -163,38 +116,43 @@ def cli():
     parser.add_argument(
         '--no-headless',
         action='store_true',
-        help='Wanna watch the watch the Rendering Drivers work?'
+        help='Wanna watch the Rendering Drivers work?'
     )
     parser.add_argument(
         '--drivers',
         type=int,
         default=1,  # Default value if the argument is not provided
-        help='Number of Rendering Drivers to use if rendering (Default 1) (WARNING: This number is doubled whenever the render, auth, and subdomains args are used together)'
+        help='Number of Rendering Drivers to use if rendering (Default 1) (WARNING: This number is doubled whenever the render, auth, and subdomains args are used together)',
+        metavar="NUM"
     )
 
     parser.add_argument(
         '--builders',
         type=int,
         default=1,  # Default value if the argument is not provided
-        help='Number of Request Builders (Default 1)'
+        help='Number of Request Builders (Default 1)',
+        metavar="NUM"
     )
     parser.add_argument(
         '--workers',
         type=int,
         default=5,  # Default value if the argument is not provided
-        help='Number of Request Workers (Default 5)'
+        help='Number of Request Workers (Default 5)',
+        metavar="NUM"
     )
     parser.add_argument(
         '--parsers',
         type=int,
         default=2,  # Default value if the argument is not provided
-        help='Number of Response Parsers (Default 2)'
+        help='Number of Response Parsers (Default 2)',
+        metavar="NUM"
     )
     parser.add_argument(
         '--db-workers',
         type=int,
         default=3,  # Default value if the argument is not provided
-        help='Number of DB Workers (Default 3)'
+        help='Number of DB Workers (Default 3)',
+        metavar="NUM"
     )
     
     args = parser.parse_args()
