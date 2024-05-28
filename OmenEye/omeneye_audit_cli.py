@@ -72,11 +72,37 @@ def generate_tree_from_structure(data_structure):
     tree_string = ".\n" + build_tree_structure(nested_structure)
     return tree_string
 
+def make_tag_dict(tags):
+    tag_dict = defaultdict(lambda: defaultdict(set))
+    
+    for tag in tags:
+        # Extract tag type
+        tag_type_match = re.match(r'<(\w+)', tag)
+        if not tag_type_match:
+            continue
+        
+        tag_type = tag_type_match.group(1)
+        
+        # Extract attributes
+        attr_pattern = re.compile(r'(\w+)="(.*?)"')
+        attributes = attr_pattern.findall(tag)
+        
+        for attr, value in attributes:
+            tag_dict[tag_type][attr].add(value)
+    
+    # Convert sets to lists
+    for tag_type in tag_dict:
+        for attr in tag_dict[tag_type]:
+            tag_dict[tag_type][attr] = list(tag_dict[tag_type][attr])
+            tag_dict[tag_type][attr].sort()
+    
+    return tag_dict
+
 #====================================================================================================
 # ACTIVE USAGE REQUIRED
 def get_body_regex(cursor, regex_pattern):
     # Compile the regular expression
-    regex = re.compile(regex_pattern.encode('utf-8'))
+    regex = re.compile(regex_pattern.encode('utf-8'), re.MULTILINE)
     
     # Prepare the query to fetch all response bodies
     query = "SELECT body FROM responses"
@@ -108,7 +134,7 @@ def get_body_regex(cursor, regex_pattern):
 
 def get_urls_matching_body_regex(cursor, regex_pattern):
     # Compile the regular expression
-    regex = re.compile(regex_pattern.encode('utf-8'))
+    regex = re.compile(regex_pattern.encode('utf-8'), re.MULTILINE)
     
     # Prepare the query to fetch all response bodies and their associated URLs
     query = "SELECT url, body FROM responses"
@@ -134,35 +160,6 @@ def get_urls_matching_body_regex(cursor, regex_pattern):
                 matching_urls.append(url)
     
     return matching_urls
-
-def get_html_bodies(cursor):
-    # Prepare the query to fetch response bodies with Content-Type 'text/html'
-    query = """
-    SELECT r.body
-    FROM responses r
-    JOIN headers h ON r.response_id = h.response_id
-    WHERE h.header_name = 'Content-Type' AND h.header_value LIKE 'text/html%'
-    """
-    
-    # Execute the query
-    cursor.execute(query)
-    
-    # Fetch all results
-    results = cursor.fetchall()
-    
-    # List to store HTML bodies
-    html_bodies = []
-    
-    # Iterate through the results and decode the body if necessary
-    for (body,) in results:
-        # Decode the body if it's stored as bytes
-        if isinstance(body, bytes):
-            body = body.decode('utf-8', errors='ignore')
-        
-        # Add the decoded body to the list
-        html_bodies.append(body)
-    
-    return html_bodies
 
 #====================================================================================================
 # STATS & INFO
@@ -366,7 +363,9 @@ def header_values_tree(cursor):
 
     return generate_tree_from_structure(headers)
 
-def tag_attribute_tree(cursor):
+
+# Attributes and Values only
+def attribute_tree(cursor):
     # Prepare the query to fetch response bodies with Content-Type 'text/html'
     query = """
     SELECT r.body
@@ -417,7 +416,69 @@ def tag_attribute_tree(cursor):
 
     return generate_tree_from_structure(tag_attributes)
 
-def tag_url_markdown(cursor):
+# Tags, Attributes, and Values
+def tag_attribute_tree(cursor):
+    # Prepare the query to fetch response bodies with Content-Type 'text/html'
+    query = """
+    SELECT r.body
+    FROM responses r
+    JOIN headers h ON r.response_id = h.response_id
+    WHERE h.header_name = 'Content-Type' AND h.header_value LIKE 'text/html%'
+    """
+    
+    # Execute the query
+    cursor.execute(query)
+    
+    # Fetch all results
+    results = cursor.fetchall()
+    
+    # List to store HTML bodies
+    html_tags = []
+    
+    # Iterate through the results and decode the body if necessary
+    for (body,) in results:
+        # Decode the body if it's stored as bytes
+        if isinstance(body, bytes):
+            body = body.decode('utf-8', errors='ignore')
+
+            soup = BeautifulSoup(body, 'html.parser')
+            
+            # Function to create a start tag string from a BeautifulSoup tag object
+            def get_start_tag(tag):
+                attrs = " ".join([f'{key}="{value}"' for key, value in tag.attrs.items()])
+                return f"<{tag.name} {attrs}>" if attrs else f"<{tag.name}>"
+
+            # Get a list of all start tags as strings
+            all_start_tags = [get_start_tag(tag) for tag in soup.find_all(True)]
+        
+            # Add the decoded body to the list
+            html_tags.extend(all_start_tags)
+
+
+    html_tag_tree = generate_tree_from_structure(make_tag_dict(html_tags))
+    
+    return html_tag_tree
+
+def input_tag_tree(cursor):
+    # Prepare the query to fetch all distinct tags from the inputs table
+    tags_query = "SELECT DISTINCT tag FROM inputs"
+    
+    # Execute the query to fetch distinct tags
+    cursor.execute(tags_query)
+    
+    # Fetch all distinct tags
+    tags = cursor.fetchall()
+
+    input_tags = list(set([tag for (tag,) in tags]))
+    input_tags.sort()
+
+    itag_dict = make_tag_dict(input_tags)
+
+    itag_tree = generate_tree_from_structure(itag_dict)
+
+    return itag_tree
+    
+def input_tag_url_markdown(cursor):
     # Prepare the query to fetch all distinct tags from the inputs table
     tags_query = "SELECT DISTINCT tag FROM inputs"
     
@@ -466,7 +527,8 @@ def tag_url_markdown(cursor):
     markdown_list = ""
     tags = list(tag_urls.keys())
     for tag in tags:
-        markdown_list += '- [ ] ' + html.escape(tag) + "\n"
+        markdown_list += "- `" + tag + "`\n"
+        #markdown_list += "- `" + html.escape(tag) + "`\n"
         for url in tag_urls[tag]:
             markdown_list += f"\t- [{url}]({url})\n"
         #markdown_list += "\n\n"
@@ -791,14 +853,22 @@ def generate_reports(cursor, file_name):
     with open('/tmp/query_parameter_value.tree', 'w') as f:
         f.write(qpt)
 
+    at = attribute_tree(cursor)
+    with open('/tmp/attribute_value.tree', 'w') as f:
+        f.write(at)
+
     tat = tag_attribute_tree(cursor)
     with open('/tmp/tag_attribute_value.tree', 'w') as f:
         f.write(tat)
 
-    itul = tag_url_markdown(cursor)
+    itt = input_tag_tree(cursor)
+    with open('/tmp/input_tag_attribute_value.tree', 'w') as f:
+        f.write(itt)
+
+    itul = input_tag_url_markdown(cursor)
     with open('/tmp/input_tag_url_list.md', 'w') as f:
         f.write(itul)
-    
+
     stats = stats_md(cursor)
     with open('/tmp/stats.md', 'w') as f:
         f.write(stats)
@@ -810,7 +880,9 @@ def generate_reports(cursor, file_name):
         '/tmp/link_sitemap.tree',
         '/tmp/header_value.tree',
         '/tmp/query_parameter_value.tree',
+        '/tmp/attribute_value.tree',
         '/tmp/tag_attribute_value.tree',
+        '/tmp/input_tag_attribute_value.tree',
         '/tmp/input_tag_url_list.md',
         '/tmp/stats.md',
     ]
@@ -821,27 +893,6 @@ def generate_reports(cursor, file_name):
     
     
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

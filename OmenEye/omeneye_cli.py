@@ -1,4 +1,5 @@
 import argparse
+import os
 from OmenEye import OmenEye
 
 
@@ -156,6 +157,10 @@ def cli():
     )
     
     args = parser.parse_args()
+
+    if os.path.exists(args.output):
+        print(f"The DB file '{args.output}' already exists.")
+        exit(1)
 
     oe = OmenEye(
         url=args.url,
