@@ -4,8 +4,11 @@ A next-gen web crawler for precision attack surface mapping. Dumps results from 
 
 
 ```txt
-usage: omeneye [-h] --url URL --output OUTPUT [--seed-file SEED_FILE] [--mitm [MITM]] [--depth DEPTH] [--delay DELAY] [--jitter JITTER] [--robots] [--sitemaps] [--subdomains] [--js-grabbing] [--render] [--unvisited] [--silent]
-               [--blacklist BLACKLIST] [--canary {basic,adaptive}] [--proxy PROXY] [--builders BUILDERS] [--workers WORKERS] [--parsers PARSERS] [--db-workers DB_WORKERS]
+usage: omeneye [-h] --url URL --output OUTPUT [--seed-file SEED_FILE] [--mitm [PORT]] [--depth DEPTH]
+               [--delay DELAY] [--jitter JITTER] [--robots] [--sitemaps] [--subdomains] [--js-grabbing]
+               [--unvisited] [--silent] [--blacklist BLACKLIST] [--canary {basic,adaptive}] [--proxy HOST:PORT]
+               [--render] [--no-headless] [--drivers NUM] [--builders NUM] [--workers NUM] [--parsers NUM]
+               [--db-workers NUM]
 
 Omen Eye - Specialty site mapper and web crawler
 
@@ -15,7 +18,7 @@ options:
   --output OUTPUT       Required output DB name (do not use an existing DB)
   --seed-file SEED_FILE
                         A list of urls to seed the crawl from
-  --mitm [MITM]         MITM port for catching an authenticated request for authed crawls (Default 8080 if used)
+  --mitm [PORT]         MITM port for catching an authenticated request for authed crawls (Default 8080 if used)
   --depth DEPTH         Optional depth, defaults to 2 when not explicitly set
   --delay DELAY         Optional delay in seconds, requires an integer value
   --jitter JITTER       Add jitter to requests
@@ -23,19 +26,38 @@ options:
   --sitemaps            Flag to seed with sitemaps. Defaults to False.
   --subdomains          Flag to include subdomains. Defaults to False.
   --js-grabbing         Flag to grab out of scope JS files. Defaults to False.
-  --render              Flag to use Firefox/GeckoDriver to render dynamic webpages. Defaults to False. (SLOW)
-  --unvisited           Flag to include in-domain urls in the results that were seen, but were unvisited due to scope or depth. Defaults to False.
+  --unvisited           Flag to include in-domain urls in the results that were seen, but were unvisited due to
+                        scope or depth. Defaults to False.
   --silent              Flag to run without live curses output. Defaults to False.
   --blacklist BLACKLIST
                         A file with a list of blacklist regex to avoid when crawling
   --canary {basic,adaptive}
                         Use a basic or adaptive HTTP WAF Canary
-  --proxy PROXY         HTTP/S proxy to tunnel requests through (host:port)
-  --builders BUILDERS   Number of Request Builders (Default 1)
-  --workers WORKERS     Number of Request Workers (Default 5)
-  --parsers PARSERS     Number of Response Parsers (Default 2)
-  --db-workers DB_WORKERS
-                        Number of DB Workers (Default 3)
+  --proxy HOST:PORT     HTTP/S proxy to tunnel requests through
+  --render              Flag to use Firefox/GeckoDriver to render dynamic webpages. Defaults to False. (Can be slow
+                        and resource intensive)
+  --no-headless         Wanna watch the Rendering Drivers work?
+  --drivers NUM         Number of Rendering Drivers to use if rendering (Default 1) (WARNING: This number is doubled
+                        whenever the render, auth, and subdomains args are used together)
+  --builders NUM        Number of Request Builders (Default 1)
+  --workers NUM         Number of Request Workers (Default 5)
+  --parsers NUM         Number of Response Parsers (Default 2)
+  --db-workers NUM      Number of DB Workers (Default 3)
+```
+
+
+```txt
+usage: omeneye-audit [-h] -i DATABASE [-a FILENAME] [-d DIR] [-r REGEX] [-u REGEX]
+
+Analysis script for an Omen Eye database
+
+options:
+  -h, --help   show this help message and exit
+  -i DATABASE  Name of the Omen Eye database
+  -a FILENAME  Generate analysis files (zipped)
+  -d DIR       Dump the response bodies to file
+  -r REGEX     Get content from bodies that matches regex
+  -u REGEX     Get the urls that have bodies matching regex
 
 TIP: You can use the sqlite3 cli tool to run queries from the command line
     Example: sqlite3 output.db 'SELECT url FROM responses'
