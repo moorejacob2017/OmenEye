@@ -1,6 +1,6 @@
 ## Omen Eye
 
-A next-gen web crawler for precision attack surface mapping. Dumps results from a web crawl out to an SQLite3 DB for easy analysis.
+A next-gen web crawler for precise attack surface mapping. Dumps results from a web crawl out to an SQLite3 DB for easy analysis.
 
 
 ```txt
