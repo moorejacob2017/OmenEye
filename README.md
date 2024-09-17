@@ -1,4 +1,4 @@
-## Omen Eye
+## OmenEye v0.1 Beta
 
 A next-gen web crawler for precise attack surface mapping. Dumps results from a web crawl to an SQLite3 DB for easy analysis.
 
@@ -48,16 +48,60 @@ options:
 
 ## Features
 
-### Sqlite Database Output
-Abc
-
 ### Javascript Rendering
-Abc
+Many modern web pages use JavaScript to load content after the initial HTTP request, which can cause scrapers and crawlers relying on static analysis to miss important links and inputs. OmenEye addresses this by offering the option to use Selenium with GeckoDriver/Firefox, allowing full page rendering for a complete view before processing.
 
 ### Authenticated Crawling
-Abc
+Most critical attack surfaces lie behind authentication and are difficult for crawlers to reach. OmenEye includes a MITM proxy that intercepts web requests before the crawl, allowing it to use captured cookies for authentication and access those hard-to-reach areas.
 
 ### WAF Block Detection
-- **Basic Canary** - Abc
-- **Adaptive Canary** - Abc
+OmenEye includes two types of canaries for detecting WAF blocks and adjusting the crawl accordingly. The **Basic Canary** establishes a baseline and periodically sends requests to detect changes in responses, signaling when a block occurs. The **Adaptive Canary** builds on this by adding a backoff mechanism that slows the crawl once a block is cleared, helping it stay below the block threshold.
+
+
+### Sqlite Database Output
+The crawl results are stored in an SQLite3 database, providing a versatile and lightweight format for data analysis. This database can be easily integrated with a wide range of tools to examine the crawl's outcome and further process the collected information. The Database scheme is as follows:
+
+```
+-----------------------[Output Database Schema]-----------------------
+    CREATE TABLE responses (
+        response_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT,
+        visited INTEGER,
+        status_code INTEGER,
+        body BLOB
+    )
+
+    CREATE TABLE headers (
+        header_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        response_id INTEGER,
+        header_name TEXT,
+        header_value TEXT,
+        FOREIGN KEY (response_id) REFERENCES responses(response_id)
+    )
+
+    CREATE TABLE links (
+        link_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        response_id INTEGER,
+        link TEXT,
+        FOREIGN KEY (response_id) REFERENCES responses(response_id)
+    )
+
+    CREATE TABLE query_params (
+        param_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        response_id INTEGER,
+        param_name TEXT,
+        param_value TEXT,
+        FOREIGN KEY (response_id) REFERENCES responses(response_id)
+    )
+
+    CREATE TABLE inputs (
+        input_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        response_id INTEGER,
+        tag TEXT,
+        tag_name TEXT,
+        tag_value TEXT,
+        FOREIGN KEY (response_id) REFERENCES responses(response_id)
+    )
+----------------------------------------------------------------------
+```
 
