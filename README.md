@@ -1,4 +1,4 @@
-## OmenEye v0.1 Beta
+## OmenEye v0.1.0 Beta
 
 A next-gen web crawler for precise attack surface mapping. Dumps results from a web crawl to an SQLite3 DB for easy analysis.
 
