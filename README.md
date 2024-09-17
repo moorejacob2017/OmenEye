@@ -15,7 +15,7 @@ Omen Eye - Specialty site mapper and web crawler
 options:
   -h, --help            show this help message and exit
   --url URL             Required URL to crawl
-  --output OUTPUT       Required output DB name (do not use an existing DB)
+  --output OUTPUT       Required output DB name (Do not use an existing DB)
   --seed-file SEED_FILE
                         A list of urls to seed the crawl from
   --mitm [PORT]         MITM port for catching an authenticated request for authed crawls (Default 8080 if used)
@@ -45,4 +45,19 @@ options:
   --db-workers NUM      Number of DB Workers (Default 3)
 ```
 
+
+## Features
+
+### Sqlite Database Output
+Abc
+
+### Javascript Rendering
+Abc
+
+### Authenticated Crawling
+Abc
+
+### WAF Block Detection
+- **Basic Canary** - Abc
+- **Adaptive Canary** - Abc
 

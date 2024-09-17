@@ -9,7 +9,7 @@ setup(
     entry_points={
         'console_scripts': [
             'omeneye=OmenEye.omeneye_cli:cli',
-            'omeneye-audit=OmenEye.omeneye_audit_cli:cli',
+            'oeparse=OmenEye.omeneye_parse_cli:cli',
         ]
     },
     install_requires=[

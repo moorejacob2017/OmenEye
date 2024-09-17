@@ -20,7 +20,7 @@ def cli():
         '--output',
         type=str,
         required=True,  # The argument is required
-        help='Required output DB name (do not use an existing DB)'
+        help='Required output DB name (Do not use an existing DB)'
     )
     parser.add_argument(
         '--seed-file',
