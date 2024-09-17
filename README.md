@@ -59,7 +59,7 @@ OmenEye includes two types of canaries for detecting WAF blocks and adjusting th
 
 
 ### Sqlite Database Output
-The crawl results are stored in an SQLite3 database, providing a versatile and lightweight format for data analysis. This database can be easily integrated with a wide range of tools to examine the crawl's outcome and further process the collected information. The Database scheme is as follows:
+The crawl results are stored in an SQLite3 database, providing a versatile and lightweight format for data analysis. This database can be easily integrated with a wide range of tools to examine the crawl's outcome and further process the collected information. The database schema is as follows:
 
 ```
 -----------------------[Output Database Schema]-----------------------
