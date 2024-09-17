@@ -104,4 +104,6 @@ The crawl results are stored in an SQLite3 database, providing a versatile and l
     )
 ----------------------------------------------------------------------
 ```
-
+## Found a Bug? Report It!
+If you encounter any bugs or issues, please help improve the project by reporting them.
+Your feedback is invaluable, and every report makes this project better.
